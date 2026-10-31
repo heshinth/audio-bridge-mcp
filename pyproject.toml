@@ -1,12 +1,20 @@
 [project]
 name = "audio-bridge-mcp"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "MCP server that transcribes audio via any audio-capable model (Gemini, MiMo, ...)"
 authors = [
     { name = "Heshinth P", email = "heshinth@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp>=4.1.4",
+    "openai>=3.42.0",
+    "pydantic-settings>=2.16.2",
 ]
+
+[project.scripts]
+audio-bridge-mcp = "audio_bridge_mcp.server:main"
+
+[build-system]
+requires = ["uv_build>=0.11.16,<0.12.0"]
+build-backend = "uv_build"
