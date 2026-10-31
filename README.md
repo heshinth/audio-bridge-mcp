@@ -11,12 +11,14 @@ It sends the audio file to any audio-capable model through an OpenAI-compatible 
 
 ## Tool
 
-`transcribe_audio(path, language_hint?, include_tone?, model?)`
+`transcribe_audio(path, language_hint?, speaker_labels? (default true), timestamps? (default true), include_tone?, model?)`
 
 | Argument | Description |
 |---|---|
 | `path` | Absolute path to a local audio file (`wav`, `mp3`, `m4a`, `flac`, `ogg`, `aac`). The format is detected from the file content (MIME check), not the extension; files that are not valid audio are rejected |
 | `language_hint` | Optional, e.g. `Tamil` or `Tanglish` |
+| `speaker_labels` | On by default. Label each turn `Speaker 1:`, `Speaker 2:`, ... (diarization by the model) |
+| `timestamps` | On by default. Prefix each line with an approximate `[MM:SS]` start time. Model-estimated, so treat as approximate, especially on long audio |
 | `include_tone` | Append a short `Tone:` line describing the speaker's emotion and delivery |
 | `model` | Override the default model for this call |
 
@@ -103,6 +105,7 @@ Never print to stdout in the server: stdio transport uses it for protocol messag
 ```
 src/audio_bridge_mcp/
   config.py       settings from environment
-  transcriber.py  audio loading, prompt, API call
+  prompt.py       system prompt and option-driven user prompt
+  transcriber.py  audio loading, MIME check, API call
   server.py       FastMCP tool definition and entry point
 ```

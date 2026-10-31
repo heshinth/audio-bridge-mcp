@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 
 from audio_bridge_mcp.config import load_settings
+from audio_bridge_mcp.prompt import TranscriptionOptions
 from audio_bridge_mcp.transcriber import Transcriber
 
 mcp = FastMCP("Audio Bridge MCP")
@@ -13,6 +14,8 @@ def main() -> None:
     async def transcribe_audio(
         path: str,
         language_hint: str | None = None,
+        speaker_labels: bool = True,
+        timestamps: bool = True,
         include_tone: bool = False,
         model: str | None = None,
     ) -> str:
@@ -23,10 +26,13 @@ def main() -> None:
         Args:
             path: Absolute path to the audio file.
             language_hint: Optional hint such as "Tamil" or "Tanglish".
+            speaker_labels: Label each turn as "Speaker 1:", "Speaker 2:", ... (diarization).
+            timestamps: Prefix each line with an approximate [MM:SS] start time.
             include_tone: Append a short description of the speaker's tone.
             model: Override the default model for this call.
         """
-        return await transcriber.transcribe(path, language_hint, include_tone, model)
+        options = TranscriptionOptions(language_hint, speaker_labels, timestamps, include_tone)
+        return await transcriber.transcribe(path, options, model)
 
     mcp.run()
 

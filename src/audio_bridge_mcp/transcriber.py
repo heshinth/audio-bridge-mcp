@@ -5,6 +5,7 @@ import filetype
 from openai import AsyncOpenAI
 
 from audio_bridge_mcp.config import Settings
+from audio_bridge_mcp.prompt import SYSTEM_PROMPT, TranscriptionOptions, build_user_prompt
 
 # MIME type detected from file content -> `input_audio.format` value for OpenAI-compatible APIs.
 SUPPORTED_MIME_TYPES = {
@@ -15,12 +16,6 @@ SUPPORTED_MIME_TYPES = {
     "audio/ogg": "ogg",
     "audio/aac": "aac",
 }
-
-BASE_PROMPT = (
-    "Transcribe this audio verbatim. Keep every word in the language and script "
-    "it was spoken in (e.g. Tamil in Tamil script, Tanglish as spoken mixed Tamil/English). "
-    "Do not translate or summarise. Output only the transcript."
-)
 
 
 class AudioTooLargeError(ValueError):
@@ -56,28 +51,18 @@ class Transcriber:
             )
         return base64.b64encode(content).decode(), audio_format
 
-    def _build_prompt(self, language_hint: str | None, include_tone: bool) -> str:
-        prompt = BASE_PROMPT
-        if language_hint:
-            prompt += f" The audio is likely in: {language_hint}."
-        if include_tone:
-            prompt += (
-                " After the transcript, add a line starting with 'Tone:' briefly describing "
-                "the speaker's emotion and delivery."
-            )
-        return prompt
-
     async def transcribe(
-        self, path: str, language_hint: str | None = None, include_tone: bool = False, model: str | None = None
+        self, path: str, options: TranscriptionOptions = TranscriptionOptions(), model: str | None = None
     ) -> str:
         data, audio_format = self._read_audio(path)
         response = await self.client.chat.completions.create(
             model=model or self.settings.model,
             messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": self._build_prompt(language_hint, include_tone)},
+                        {"type": "text", "text": build_user_prompt(options)},
                         {"type": "input_audio", "input_audio": {"data": data, "format": audio_format}},
                     ],
                 }
