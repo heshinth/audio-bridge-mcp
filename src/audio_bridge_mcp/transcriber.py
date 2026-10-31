@@ -1,12 +1,20 @@
 import base64
 from pathlib import Path
 
+import filetype
 from openai import AsyncOpenAI
 
 from audio_bridge_mcp.config import Settings
 
-# Extension -> `input_audio.format` value expected by OpenAI-compatible APIs.
-SUPPORTED_FORMATS = {".wav": "wav", ".mp3": "mp3", ".m4a": "m4a", ".flac": "flac", ".ogg": "ogg", ".aac": "aac"}
+# MIME type detected from file content -> `input_audio.format` value for OpenAI-compatible APIs.
+SUPPORTED_MIME_TYPES = {
+    "audio/x-wav": "wav",
+    "audio/mpeg": "mp3",
+    "audio/mp4": "m4a",
+    "audio/x-flac": "flac",
+    "audio/ogg": "ogg",
+    "audio/aac": "aac",
+}
 
 BASE_PROMPT = (
     "Transcribe this audio verbatim. Keep every word in the language and script "
@@ -16,6 +24,10 @@ BASE_PROMPT = (
 
 
 class AudioTooLargeError(ValueError):
+    pass
+
+
+class UnsupportedAudioError(ValueError):
     pass
 
 
@@ -30,13 +42,19 @@ class Transcriber:
         file = Path(path).expanduser()
         if not file.is_file():
             raise FileNotFoundError(f"Audio file not found: {file}")
-        audio_format = SUPPORTED_FORMATS.get(file.suffix.lower())
-        if audio_format is None:
-            raise ValueError(f"Unsupported format '{file.suffix}'. Supported: {', '.join(SUPPORTED_FORMATS)}")
         max_bytes = self.settings.max_file_mb * 1024 * 1024
         if file.stat().st_size > max_bytes:
             raise AudioTooLargeError(f"File exceeds the {self.settings.max_file_mb} MB limit")
-        return base64.b64encode(file.read_bytes()).decode(), audio_format
+        content = file.read_bytes()
+        detected = filetype.guess(content)
+        audio_format = SUPPORTED_MIME_TYPES.get(detected.mime) if detected else None
+        if audio_format is None:
+            found = detected.mime if detected else "unknown"
+            raise UnsupportedAudioError(
+                f"Unsupported file content '{found}' (extension '{file.suffix}'). "
+                f"Supported: {', '.join(SUPPORTED_MIME_TYPES)}"
+            )
+        return base64.b64encode(content).decode(), audio_format
 
     def _build_prompt(self, language_hint: str | None, include_tone: bool) -> str:
         prompt = BASE_PROMPT

@@ -8,6 +8,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp>=4.1.4",
+    "filetype>=1.2.0",
     "openai>=3.42.0",
     "pydantic-settings>=2.16.2",
 ]

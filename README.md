@@ -15,7 +15,7 @@ It sends the audio file to any audio-capable model through an OpenAI-compatible 
 
 | Argument | Description |
 |---|---|
-| `path` | Absolute path to a local audio file (`wav`, `mp3`, `m4a`, `flac`, `ogg`, `aac`) |
+| `path` | Absolute path to a local audio file (`wav`, `mp3`, `m4a`, `flac`, `ogg`, `aac`). The format is detected from the file content (MIME check), not the extension; files that are not valid audio are rejected |
 | `language_hint` | Optional, e.g. `Tamil` or `Tanglish` |
 | `include_tone` | Append a short `Tone:` line describing the speaker's emotion and delivery |
 | `model` | Override the default model for this call |
