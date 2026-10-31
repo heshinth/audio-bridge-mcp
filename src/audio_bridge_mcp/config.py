@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     api_key: str
     base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
-    model: str = "gemini-3.5-flash"
+    model: str = "gemini-3.5-flash-lite"
     max_file_mb: int = 20
     timeout_seconds: float = 120
 
